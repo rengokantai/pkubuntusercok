@@ -245,10 +245,51 @@ a2dissite 000-default.conf
 a2ensite example.conf
 service apache2 reload
 ```
-
-
-
-
+config fqdn
+```
+vim /etc/apache2/conf-available/fqdn.conf
+```
+edit
+```
+ServerName  localhost
+```
+then enable
+```
+a2enconf fqdn
+service apache2 reload
+```
+enable http2
+```
+a2enmod http2
+```
+```
+<VirtualHost *:443>
+    Protocols h2 http/1.1
+    ...
+</VirtualHost>
+```
+######Serving dynamic contents with PHP
+```
+apt-get update
+apt-get install -y php7.0 libapache2-mod-php7.0
+```
+then
+```
+vim /var/www/example/index.php
+```
+edit
+```
+<?php echo phpinfo(); ?>
+```
+then
+```
+vim /etc/apache2/sites-available/example.conf
+```
+edit
+```
+DirectoryIndex index.php index.html
+DocumentRoot /var/www/example
+```
 
 
 
