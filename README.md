@@ -208,6 +208,51 @@ test
 dig -x 127.0.0.1
 ```
 (disc)
+
+#####Chapter 3. Working with Web Servers
+multi-processing modules (MPM)
+######Installing and configuring the Apache web server
+```
+apt-get install apache2 -y
+add-apt-repository -y ppa:ondrej/apache2
+apt-key update
+apt-get update
+apt-get --only-upgrade install apache2 -y
+```
+make a site
+```
+cd /var/www
+mkdir example
+chmod 750 example
+echo 'ke' > index.html
+```
+create conf
+```
+cd /etc/apache2/sites-available
+cp 000-default.conf example.conf
+```
+then
+```
+vim example.conf
+```
+edit
+```
+DocumentRoot /var/www/example
+```
+then
+```
+a2dissite 000-default.conf
+a2ensite example.conf
+service apache2 reload
+```
+
+
+
+
+
+
+
+
 #####Chapter 5. Handling Databases
 ######Installing relational databases with MySQL
 ```
@@ -274,4 +319,23 @@ select * from tb;
 in-out
 ```
 mysql -u root -p db < query.sql > output.csv
+```
+######Adding users and assigning access rights
+```
+create user ‘dbuser’@’localhost’ identified by ‘password’;
+select user, host, authentication_string from mysql.user where user = ‘dbuser’; // in mysql 5.6, it is called password
+grant all privileges on *.* to ‘dbuser’@’localhost’ with grant option;
+show grants for ‘dbuser’@’localhost’
+```
+allow user login from anywhere
+```
+create user ‘dbuser’@’%’ identified by ‘password’;
+```
+drop user
+```
+drop user ‘dbuser’@’%’;
+```
+source limits
+```
+grant all on db.* to ‘dbuser’@’localhost’ with max_queries_per_hour 20 max_updates_per_hour 10 max_connections_per_hour 1 max_user_connections 2;
 ```
