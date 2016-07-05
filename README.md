@@ -273,6 +273,12 @@ a2enmod http2
 apt-get update
 apt-get install -y php7.0 libapache2-mod-php7.0
 ```
+(other mods)
+```
+apt-get install -y php7.0 libapache2-mod-python
+apt-get install -y php7.0 libapache2-mod-perl2
+apt-get install -y php7.0 libapache2-mod-passenger (ruby)
+```
 then
 ```
 vim /var/www/example/index.php
@@ -290,6 +296,83 @@ edit
 DirectoryIndex index.php index.html
 DocumentRoot /var/www/example
 ```
+php-config
+```
+vim /usr/lib/php/7.0/php.ini-development
+```
+use the ini file in apache
+```
+cd /etc/php/7.0/apache2
+mv php.ini php.ini.orig
+ln -s /usr/lib/php/7.0/php.ini-development php.ini
+```
+
+install lamp
+```
+apt-get install lamp-server^   //OR tasksel install lamp-server
+```
+ungrade to php7 on u14
+```
+apt-get install software-properties-common
+add-apt-repository ppa:ondrej/php
+apt-get update
+apt-get install php7.0
+```
+######Hosting multiple websites with a virtual domain
+```
+a2ensite example*
+a2ensite dev.example1.com.conf
+service apache2 reload
+```
+test
+```
+a2query -s
+```
+get all avail ip addresses
+```
+ifconfig | grep "inet addr"
+```
+edit
+```
+Listen 80
+<VirtualHost 192.1.1.1>
+```
+######Securing web traffic with HTTPS
+```
+mkdir /etc/apache2/ssl && cd /etc/apache2/ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ssl.key -out ssl.crt
+a2enmod ssl
+service apache2 restart
+service apache2 reload
+```
+then
+```
+<VirtualHost *:443>
+SSLEngine on
+SSLCertificateFile /etc/apache2/ssl/ssl.crt
+SSLCertificateKeyFile /etc/apache2/ssl/ssl.key
+```
+```
+openssl genrsa -des3 -out server.key 2048
+openssl rsa -in server.key -out server.key.insecure
+mv server.key server.key.secure
+mv server.key.insecure server.key
+openssl req -new -key server.key -out server.csr
+```
+now you can submit this CSR for signing purposes.
+######Benchmarking
+```
+apt-get install apache2-utils
+ab -n 10000 -c 200 -t 2 -k "http://127.0.0.1/index.php"
+```
+
+
+
+
+
+
+
+
 
 
 
