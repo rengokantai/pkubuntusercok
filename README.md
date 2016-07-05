@@ -108,3 +108,104 @@ install fail2ban (watch and block repeated failed actions)
 ```
 apt-get install fail2ban 
 ```
+#####Chapter 2. Networking
+######Connecting to a network with a static IP
+```
+ifconfig -a | grep eth
+```
+```
+ifup eth0
+ifdown eth0
+```
+```
+vim /etc/network/interfaces
+```
+edit from
+```
+auto eth0
+iface eth0 inet dhcp
+```
+to
+```
+auto eth0
+iface eth0 inet static
+    address 192.168.1.100
+    netmask 255.255.255.0
+    gateway 192.168.1.1 
+    dns-nameservers 192.168.1.45 192.168.1.46
+```
+(ipv6)
+```
+iface eth0 inet6 static
+address 2001:db8::1111:22222
+gateway ipv6_gateway
+```
+restart
+```
+/etc/init.d/networking restart
+```
+use command line
+```
+ifconfig eth0 192.168.1.100 netmask 255.255.255.0
+```
+add a route
+```
+route add default gw 192.168.1.1 eth0
+```
+add name server:
+```
+vim /etc/resolv.conf
+```
+edit
+```
+nameserver 192.168.1.45
+nameserver 192.168.1.46
+```
+verify
+```
+ifconfig eth0
+route -n
+```
+reset it 
+```
+ip addr flush eth0
+```
+######Installing the DHCP server
+```
+apt-get install isc-dhcp-server
+vim /etc/dhcp/dhcpd.conf
+```
+edit
+```
+default-lease-time 600;
+max-lease-time 7200;
+subnet 192.168.1.0 netmask 255.255.255.0 {
+  range 192.168.1.150 192.168.1.200;
+  option routers 192.168.1.1;
+  option domain-name-servers 192.168.1.2, 192.168.1.3;
+  option domain-name "example.com";
+}
+```
+restart
+```
+service isc-dhcp-server restart
+```
+######Installing the DNS server
+```
+apt-get update
+apt-get install bind9 dnsutils
+vim /etc/bind/named.conf.options
+```
+edit
+```
+forwarders{
+8.8.8.8;
+8.8.4.4;
+}
+```
+test
+```
+dig -x 127.0.0.1
+```
+(disc)
+
