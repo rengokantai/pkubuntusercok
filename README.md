@@ -208,4 +208,70 @@ test
 dig -x 127.0.0.1
 ```
 (disc)
-
+#####Chapter 5. Handling Databases
+######Installing relational databases with MySQL
+```
+vim /etc/mysql/my.cnf
+```
+bind to local ip addr.  
+in 14.04, mysql 5.6
+```
+[mysqld]
+bind-address = 10.0.2.6
+```
+for 16.04, mysql 5.7
+```
+apt-get update
+apt-get install mysql-server-5.7
+```
+configure:
+```
+vim /etc/mysql/mysql.conf.d/mysqld.cnf
+```
+edit
+```
+[mysqld]
+bind-address = 10.0.2.6
+```
+restart
+```
+service mysql restart
+```
+install php7.0
+```
+apt-get install php7.0-mysql php7.0 -y
+```
+######Importing and exporting bulk data
+```
+mysqldump -u root -p db > db_backup.sql
+mysqldump -u root -p db table1 table2 > table_backup.sql
+mysqldump -u root -p db | gzip > db_backup.sql.gz
+```
+export into csv
+```
+SELECT id, title, contents FROM articles
+INTO OUTFILE ‘/tmp/articles.csv’
+FIELDS TERMINATED BY ‘,’ ENCLOSED BY ‘”’
+LINES TERMINATED BY ‘\n’;
+```
+import data csv
+```
+LOAD DATA INFILE ‘c:/tmp/articles.csv’
+INTO TABLE articles
+FIELDS TERMINATED BY ‘,’  ENCLOSED BY ‘”’
+LINES TERMINATED BY \n IGNORE 1 ROWS;
+```
+import
+```
+mysqladmin -u admin -p create db2
+mysql -u admin -p db2 < db_backup.sql
+```
+fetch from local:  
+query.sql
+```
+select * from tb;
+```
+in-out
+```
+mysql -u root -p db < query.sql > output.csv
+```
