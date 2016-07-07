@@ -463,8 +463,33 @@ source limits
 ```
 grant all on db.* to ‘dbuser’@’localhost’ with max_queries_per_hour 20 max_updates_per_hour 10 max_connections_per_hour 1 max_user_connections 2;
 ```
-
-
+#####Chapter 7. Cloud Computing
+######
+```
+apt-get install kvm cloud-utils genisoimage bridge-utils -y
+```
+check
+```
+kvm-ok
+```
+download ubuntu test iso
+```
+ wget http://cloud-images.ubuntu.com/releases/trusty/release/ubuntu-14.04-server-cloudimg-amd64-disk1.img -O trusty.img.dist
+ ```
+ #####Chapter 8. Working with Containers
+ ######Understanding Docker volumes
+ ```
+ docker run -dP -v /var/lib/mysql --name mysql -e MYSQL_ROOT_PASSWORD=pass mysql:latest
+ docker inspect mysql
+ ```
+ create a local folder and mount it as a volume inside a container at /var/lib/mysql.
+ ```
+mkdir ~/mysql && docker run -dP -v ~/mysql:/var/lib/mysql --name mysql mysql:latest
+```
+create backup
+```
+docker run --rm --volumes-from mysql -v ~/backup:/backup ubuntu tar cvf /backup/mysql.tar /var/lib/mysql
+```
 
 #####Chapter 10. Communication Server with XMPP
 ######Installing Ejabberd
