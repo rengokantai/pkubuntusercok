@@ -463,3 +463,76 @@ source limits
 ```
 grant all on db.* to ‘dbuser’@’localhost’ with max_queries_per_hour 20 max_updates_per_hour 10 max_connections_per_hour 1 max_user_connections 2;
 ```
+#####Chapter 11. Git Hosting
+######Git
+```
+git config --list
+```
+######Installgitlab
+```
+curl -s https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash
+apt-get install gitlab-ce=8.9.5-ce.0
+gitlab-ctl reconfigure
+gitlab-ctl status
+```
+open browser to set new account.
+######Git hook
+```
+touch .git/hooks/post-commit
+```
+edit
+```
+#!/bin/bash
+echo "Post commit hook started"
+WEBROOT=/var/www/git-hooks-demo
+TARBALL=/tmp/myapp.tar
+echo "Exporting repository contents"
+git archive master --format=tar --output $TARBALL
+mkdir $WEBROOT/html_new
+tar -xf $TARBALL -C $WEBROOT/html_new --strip-components 1
+echo "Backup existing setup"
+mv $WEBROOT/html $WEBROOT/backups/html-'date +%Y-%m-%d-%T'
+echo "Deploying latest code"
+mv $WEBROOT/html_new $WEBROOT/html
+exit 0
+```
+#####Chapter 14. Centralized Authentication Service
+######Installing OpenLDAP
+```
+apt-get update
+apt-get install slapd ldap-utils
+dpkg-reconfigure slapd
+```
+set:
+```
+NO->example.com->example->(pass)->HDB->NO->YES->NO
+```
+test
+```
+ldapsearch -x -LLL -H ldap:/// -b dc=example,dc=com dn
+ldapsearch -x -LLL -b dc=example,dc=com
+```
+######Installing phpLDAPadmin
+```
+apt-get install phpldapadmin
+vim /etc/phpldapadmin/config.php
+```
+edit
+```
+$config->custom->appearance['hide_template_warning'] = true;
+```
+
+If error
+```
+vim /usr/share/phpldapadmin/lib/TemplateRender.php
+```
+edit
+```
+$default = $this->getServer()
+->getValue('appearance','password_hash');
+```
+to
+```
+$default = $this->getServer()
+->getValue('appearance','password_hash_custom');
+```
