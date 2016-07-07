@@ -463,12 +463,57 @@ source limits
 ```
 grant all on db.* to ‘dbuser’@’localhost’ with max_queries_per_hour 20 max_updates_per_hour 10 max_connections_per_hour 1 max_user_connections 2;
 ```
+
+
+
+#####Chapter 10. Communication Server with XMPP
+######Installing Ejabberd
+```
+root@a:~# wget https://www.process-one.net/downloads/downloads-action.php?file=/ejabberd/16.06/ejabberd_16.06-0_amd64.deb -O ejabberd.deb
+/opt/ejabberd-16.06/bin/ejabberdctl start
+/opt/ejabberd-16.06/bin/ejabberdctl status
+```
+create a admin
+```
+/opt/ejabberd-16.06/bin/ejabberdctl register admin localhost pass
+```
+or
+```
+vim /opt/ejabberd-16.06/conf/ejabberd.yml   /acl
+```
+login
+```
+admin@host  admin
+```
+######create users
+```
+./ejabberdctl register user1 a root
+```
+list all accounts
+```
+./ejabberdctl registered_users a  
+```
+using client cool: PSI
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #####Chapter 11. Git Hosting
 ######Git
 ```
 git config --list
 ```
-######Installgitlab
+######Installgitlab(require 2GB vps)
 ```
 curl -s https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash
 apt-get install gitlab-ce=8.9.5-ce.0
