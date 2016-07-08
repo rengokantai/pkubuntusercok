@@ -463,6 +463,96 @@ source limits
 ```
 grant all on db.* to ‘dbuser’@’localhost’ with max_queries_per_hour 20 max_updates_per_hour 10 max_connections_per_hour 1 max_user_connections 2;
 ```
+
+
+#####Chapter 6. Network Storage
+######Installing the Samba server
+```
+apt-get install samba -y
+smbd --version
+```
+config
+```
+cp /etc/samba/smb.conf /etc/samba/smb.conf.orignal
+vim /etc/samba/smb.conf
+```
+edit
+```
+[global]
+workgroup = WORKGROUP
+server string = Samba Server
+netbios name = ubuntu
+security = user
+map to guest = bad user
+dns proxy = no
+[Public]
+path = /var/samba/shares/public
+browsable =yes
+writable = yes
+guest ok = yes
+read only = no
+create mask = 644
+```
+then
+```
+mkdir -p /var/samba/shares/public
+chmod 777 /var/samba/shares/public
+service smbd restart
+```
+######Adding users to the Samba server
+```
+mkdir -p /var/samba/share/smbuser && useradd -d /home/smbuser -s /sbin/nologin smbuser && smbpasswd -a smbuser && chown smbuser:smbuser /var/samba/share/smbuser
+vim /etc/samba/smb.conf
+```
+edit
+```
+[Private]
+path = /var/samba/shares/smbuser
+browsable = yes
+writable = yes
+valid users = smbuser
+```
+enable
+```
+service smbd reload
+smbpasswd -e smbuser //enable user
+smbpasswd -d smbuser //disable user
+smbpasswd -x smbuser //delete user
+```
+syntax:
+```
+valid users = smbuser,smbuser2
+```
+######Performance tuning the Samba server
+```
+vim /etc/samba/smb.conf
+```
+edit
+```
+[global]
+log level = 1
+socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=131072 SO_SNDBUF=131072 SO_KEEPALIVE
+read raw = Yes
+write raw = Yes
+strict locking = No
+oplocks = yes
+max xmit = 65535
+dead time = 15
+getwd cache = yes
+aio read size = 16384
+aio write size = 16384
+use sendfile = true
+```
+
+
+
+
+
+
+
+
+
+
 #####Chapter 7. Cloud Computing
 ######
 ```
@@ -490,6 +580,37 @@ create backup
 ```
 docker run --rm --volumes-from mysql -v ~/backup:/backup ubuntu tar cvf /backup/mysql.tar /var/lib/mysql
 ```
+create named volume
+```
+docker volume create --name=myvolume
+docker run -v myvolume:/opt alpine sh
+```
+######Deploying WordPress using a Docker network
+using network
+```
+docker network create wpnet
+docker network ls
+docker network inspect wpnet
+docker run --name mysql -d -e MYSQL_ROOT_PASSWORD=password --net wpnet mysql
+docker run --name wordpress -d -p 80:80 --net wpnet -e WORDPRESS_DB_HOST=mysql -e WORDPRESS_DB_PASSWORD=password wordpress
+```
+(dis)connect a already created container
+```
+docker network (dis)connect wpnet mysql
+```
+using --link
+```
+docker run --name mysql -d -e MYSQL_ROOT_PASSWORD=password mysql
+docker run --name wordpress -d -p 80:80 --link mysql:mysql
+```
+
+
+
+
+
+
+
+
 
 #####Chapter 10. Communication Server with XMPP
 ######Installing Ejabberd
