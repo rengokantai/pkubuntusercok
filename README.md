@@ -465,6 +465,31 @@ grant all on db.* to ‘dbuser’@’localhost’ with max_queries_per_hour 20 m
 ```
 
 
+######Installing web access for MySQL
+```
+apt-get install phpmyadmin php-mbstring php7.0-mbstring php-gettext
+service apache2 restart
+```
+######
+```
+mysqldump --databases a b -u admin -p > alldb_backup.sql
+mysqldump --all-databases -u admin -p > alldb_backup.sql
+```
+######
+```
+set global slow_query_log = 1;
+set global slow_query_log_file = '/var/log/mysql/slow.log';
+```
+explicitly use or ignore index
+```
+select * from salaries use index (salaries) where salary between 30000 and 65000 and from_date > ‘1986-01-01’;
+select * from salaries where salary between 30000 and 65000 and from_date > ‘1986-01-01’ ignore index (from_date);
+```
+analyze
+```
+select * from `employees` procedure analyse();
+```
+
 #####Chapter 6. Network Storage
 ######Installing the Samba server
 ```
