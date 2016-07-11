@@ -488,6 +488,10 @@ then
 ```
 vim /etc/apache2/ports.conf
 ```
+edit
+```
+listen 127.0.0.1:8080
+```
 
 then
 ```
@@ -501,6 +505,9 @@ edit
   DocumentRoot /var/www/example.com/public_html
 </VirtualHost>
 ```
+```
+a2dissite 000-default.conf && a2ensite example.com.conf
+```
 then
 ```
 service apache2 restart  && service nginx restart
@@ -511,12 +518,49 @@ service apache2 restart  && service nginx restart
 apt-get install apache2-utils
 ab -n 10000 -c 200 -t 2 -k "http://127.0.0.1/index.php"
 ```
+######Securing the web server
+check all enabled modules
+```
+a2query -m
+```
+hide identity
+```
+vim /etc/apache2/conf-available/security.conf
+```
+edit
+```
+ServerSignature Off
+ServerTokens Prod
+```
+disable status module
+```
+a2dismod status
+```
+nginx
+```
+server_tokens off;
+```
+apache: disable index
+```
+<Directory /var/www/example.com>
+  Options -Indexes
+</Directory>
+```
 
-
-
-
-
-
+or disable globally
+```
+vim /etc/apache2/apache2.conf
+```
+disable symbolic links
+```
+<Directory />
+  Options -FollowSymLinks
+</Directory>
+```
+install modsecurity
+```
+apt-get install libapache2-modsecurity && a2enmod mod-security
+```
 
 
 
