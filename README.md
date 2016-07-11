@@ -201,13 +201,80 @@ edit
 forwarders{
 8.8.8.8;
 8.8.4.4;
-}
+};
 ```
 test
 ```
 dig -x 127.0.0.1
 ```
 (disc)
+######Hiding behind the proxy with squid
+```
+vim /etc/squid/squid.conf
+```
+
+```
+cache_dir ufs /var/spool/squid 100 16 256
+http_port 8080
+visible_hostname proxy1
+```
+
+######Being on time with NTP
+```
+apt-get install ntp ntpdate -y         
+ntpdate -s ntp.ubuntu.com
+vim /etc/ntp.conf
+```
+edit
+```
+
+```
+###### load balancing with HAProxy
+```
+apt-get install haproxy -y
+```
+set boot enable
+```
+vim /etc/default/haproxy
+```
+add
+```
+ENABLED=1
+```
+
+######Securing remote access with OpenVPN
+```
+apt-get install openvpn easy-rsa -y
+```
+then
+```
+vim /etc/openvpn/easy-rsa/vars
+```
+(disc)
+
+######Discussing Ubuntu security best practices
+```
+adduser user
+passwd user
+adduser user sudo
+```
+edit sshd
+```
+port 2222
+PermitRootLogin no
+PasswordAuthentication no
+AllowUsers user@(your-ip) user@(other-ip)
+```
+Optionally, install UFW
+```
+ufw allow from <your-IP> to any port 22 proto tcp  # memorize this syntax
+ufw allow 80/tcp
+ufw enable
+```
+
+
+
+
 
 #####Chapter 3. Working with Web Servers
 multi-processing modules (MPM)
@@ -360,6 +427,85 @@ mv server.key.insecure server.key
 openssl req -new -key server.key -out server.csr
 ```
 now you can submit this CSR for signing purposes.
+
+######
+```
+apt-get install nginx php7.0-fpm -y
+vim /etc/nginx/sites-available/default
+```
+edit
+```
+index index.php index.html index.htm;
+location / {
+    try_files $uri $uri/ /index.php;
+}
+location ~ \.php$ {
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_param QUERY_STRING    $query_string;
+    fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+}
+```
+then
+```
+vim /etc/php/7.0/fpm/php.ini
+```
+edit
+```
+cgi.fix_pathinfo=0
+```
+restart
+```
+service php7.0-fpm restart && service nginx restart
+```
+create index page
+```
+vim /var/www/html/index.php
+```
+edit
+```
+<?php phpinfo(); ?>
+```
+purge apache server
+```
+apt-get install python-software-properties
+apt-get install software-properties-common
+service apache2 stop
+apt-get remove --purge apache2 apache2-utils apache2.2-bin apache2-common
+```
+######
+```
+vim /etc/nginx/sites-available/reverse_proxy
+```
+edit
+```
+```
+link
+```
+ln -s /etc/nginx/sites-available/reverse_proxy /etc/nginx/sites-enabled/reverse_proxy
+```
+then
+```
+vim /etc/apache2/ports.conf
+```
+
+then
+```
+vim /etc/apache2/sites-available/example.com
+```
+edit
+```
+<VirtualHost 127.0.0.1:8080>
+  ServerName example.com
+  ServerAdmin e@example.com
+  DocumentRoot /var/www/example.com/public_html
+</VirtualHost>
+```
+then
+```
+service apache2 restart  && service nginx restart
+```
+
 ######Benchmarking
 ```
 apt-get install apache2-utils
