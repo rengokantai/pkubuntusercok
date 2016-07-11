@@ -512,6 +512,63 @@ then
 ```
 service apache2 restart  && service nginx restart
 ```
+check
+```
+netstat -pltn | egrep '(nginx|apache)'
+```
+
+######Setting HTTPs on Nginx
+```
+mkdir -p /etc/nginx/ssl/example.com
+vim /etc/nginx/sites-available/example.com
+```
+edit
+```
+server {
+  listen 80;
+  server_name example.com www.example.com;
+  return 301 https://$host$request_uri;
+}
+server {
+  listen 443 ssl;
+  server_name example.com www.example.com;
+
+  
+root /var/www/example.com/public_html;
+  index index.php index.html index.htm;
+
+  ssl on;
+  ssl_certificate     /etc/nginx/ssl/example.com/server.crt;
+  ssl_certificate_key     /etc/nginx/ssl/example.com/server.key;
+  # if you have received ca-certs.pem from Certification Authority
+  #ssl_trusted_certificate /etc/nginx/ssl/example.com/ca-certs.pem;
+
+  ssl_session_cache shared:SSL:10m;
+  ssl_session_timeout 5m;
+  keepalive_timeout   70;
+
+  
+ssl_ciphers "HIGH:!aNULL:!MD5 or HIGH:!aNULL:!MD5:!3DES";
+  ssl_prefer_server_ciphers on;
+  ssl_protocols  TLSv1.2 TLSv1.1 TLSv1;
+  add_header Strict-Transport-Security "max-age=31536000";
+
+  location / {
+    try_files $uri $uri/ /index.php;
+  }
+
+  location ~ \.php$ {
+    include fastcgi_params;
+    fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+  
+}
+}
+```
+cleanup
+```
+ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/example.com
+service nginx reload
+```
 
 ######Benchmarking
 ```
@@ -561,8 +618,94 @@ install modsecurity
 ```
 apt-get install libapache2-modsecurity && a2enmod mod-security
 ```
+######Troubleshooting the web server
+
+```
+apache2ctl -S
+```
+#####Chapter 4. Working with Mail Servers
+######Sending e-mails with Postfix
+```
+apt-get install postfix mailutils -y
+```
+we set system mail name:
+```
+mail.example.com
+```
+then configure
+```
+vim /etc/postfix/main.cf
+```
+```
+sendmail user@host
+```
+press ctrl D to send  
+check:
+```
+mail
+```
+######Enabling IMAP and POP3 with Dovecot
+```
+apt-get install dovecot-imapd dovecot-pop3d -y
+```
+config
+```
+vim /etc/dovecot/dovecot.conf
+```
+add new line
+```
+# Enable installed protocols
+protocols = pop3 pop3s imap imaps
+```
+
+config
+```
+vim /etc/dovecot/conf.d/10-mail.conf
+```
+edit
+```
+mail_location = mbox:~/mail:INBOX=/var/spool/mail/%u
+```
+If you are using Maildir as your mailbox format,
+```
+mail_location = maildir:~/Maildir
+```
+To get all enabled configurations, use the doveconf -n command:
+```
+doveconf -n > /etc/dovecot/dovecot.conf
+```
 
 
+######Mail filtering with spam-assassin
+```
+apt-get install spamassassin spamc
+```
+config postfix
+```
+vim /etc/postfix/master.cf
+```
+edit
+```
+smtp      inet  n       -       -       -       -       smtpd -o content_filter=spamassassin
+```
+(dist)
+######Troubleshooting the mail server
+```
+tail -f /var/log/mail.log | grep "dovecot"
+```
+enable debug mode
+```
+vim /etc/dovecot/conf.d/10-logging.conf
+```
+edit
+```
+auth_verbose = yes
+mail_debug = yes
+```
+restart
+```
+service dovecot restart
+```
 
 
 
@@ -660,12 +803,12 @@ grant all on db.* to ‘dbuser’@’localhost’ with max_queries_per_hour 20 m
 apt-get install phpmyadmin php-mbstring php7.0-mbstring php-gettext
 service apache2 restart
 ```
-######
+######Setting backups
 ```
 mysqldump --databases a b -u admin -p > alldb_backup.sql
 mysqldump --all-databases -u admin -p > alldb_backup.sql
 ```
-######
+######Optimizing MySQL performance – queries
 ```
 set global slow_query_log = 1;
 set global slow_query_log_file = '/var/log/mysql/slow.log';
@@ -678,6 +821,48 @@ select * from salaries where salary between 30000 and 65000 and from_date > ‘1
 analyze
 ```
 select * from `employees` procedure analyse();
+```
+
+
+You can specify hash partitioning.
+```
+create table employees (
+    id int not null,
+    fname varchar(30),
+    lname varchar(30),
+    store_id int
+) partition by hash(store_id) partitions 4;
+```
+or alter table
+```
+alter table employees partition by hash(store_id) partitions 4;
+```
+######Optimizing MySQL performance
+```
+vim /etc/mysql/mysql.conf.d/mysqld.cnf
+```
+edit
+```
+innodb_buffer_pool_size = 512M  # around 70% of total ram
+innodb_log_file_size  = 64M
+innodb_file_per_table = 1
+innodb_log_buffer_size = 4M
+key_buffer_size = 64M
+slow_query_log = 1
+slow_query_log_file = /var/lib/mysql/mysql-slow.log
+long_query_time = 2
+query_cache_size = 0
+max_connections = 300
+tmp_table_size = 32M
+max_allowed_packet = 32M
+log_bin = /var/log/mysql/mysql-bin.log
+```
+(failed, donot know which section to apply)
+######Creating MySQL replicas for scaling and high availability
+
+######Troubleshooting MySQL
+```
+mysqlcheck -u root -p --auto-repair --check --optimize databasename
 ```
 
 #####Chapter 6. Network Storage
